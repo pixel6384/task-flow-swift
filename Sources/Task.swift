@@ -8,6 +8,14 @@ enum Priority: Int, Codable, Comparable {
     static func < (lhs: Priority, rhs: Priority) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
+
+    var description: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        }
+    }
 }
 
 struct Task: Codable {

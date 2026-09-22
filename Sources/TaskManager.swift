@@ -34,6 +34,13 @@ class TaskManager {
         return false
     }
 
+    func clearCompleted() -> Int {
+        let initialCount = tasks.count
+        tasks.removeAll { $0.isCompleted }
+        saveTasks()
+        return initialCount - tasks.count
+    }
+
     private func saveTasks() {
         if let data = try? JSONEncoder().encode(tasks) {
             try? data.write(to: storageURL)
