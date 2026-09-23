@@ -48,14 +48,15 @@ class TaskManager {
         return false
     }
 
-    func updateTask(index: Int, newTitle: String) -> Bool {
+    func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {
             return false
         }
         let taskToUpdate = pending[index]
         if let idx = tasks.firstIndex(where: { $0.id == taskToUpdate.id }) {
-            tasks[idx].title = newTitle
+            if let title = newTitle { tasks[idx].title = title }
+            if let priority = newPriority { tasks[idx].priority = priority }
             saveTasks()
             return true
         }

@@ -58,12 +58,31 @@ case "remove":
     }
 
 case "update":
-    guard args.count >= 4, let index = Int(args[2]) else {
-        print("Error: Usage: task-flow update [index] [new title]")
+    guard args.count >= 3, let index = Int(args[2]) else {
+        print("Error: Usage: task-flow update [index] ["title <new title>"] ["priority <high|medium|low>"]")
         exit(1)
     }
-    let newTitle = args[3]
-    if manager.updateTask(index: index, newTitle: newTitle) {
+    
+    var newTitle: String? = nil
+    var newPriority: Priority? = nil
+    
+    if args.count >= 4 {
+        if args[3] == "title" && args.count >= 5 {
+            newTitle = args[4]
+        } else if args[3] == "priority" && args.count >= 5 {
+            let p = args[4].lowercased()
+            if p == "high" { newPriority = .high }
+            else if p == "medium" { newPriority = .medium }
+            else if p == "low" { newPriority = .low }
+        }
+    }
+    
+    if newTitle == nil && newPriority == nil {
+        print("Error: Please specify what to update: 'title <text>' or 'priority <level>'")
+        exit(1)
+    }
+
+    if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority) {
         print("Task updated successfully!")
     } else {
         print("Error: Task not found.")
