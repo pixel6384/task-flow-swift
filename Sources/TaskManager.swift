@@ -88,6 +88,18 @@ class TaskManager {
         return false
     }
 
+    func completeAllTasks() -> Int {
+        var count = 0
+        for i in 0..<tasks.count {
+            if !tasks[i].isCompleted {
+                tasks[i].isCompleted = true
+                count += 1
+            }
+        }
+        saveTasks()
+        return count
+    }
+
     func removeTask(index: Int) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {

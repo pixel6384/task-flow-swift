@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due|sort|today] [args]")
+    print("Usage: task-flow [add|list|list-all|done|done-all|remove|update|clear|search|status|due|sort|today] [args]")
     exit(1)
 }
 
@@ -101,6 +101,14 @@ case "done":
         print("Task marked as completed!")
     } else {
         print("Error: Task not found.")
+    }
+
+case "done-all":
+    let count = manager.completeAllTasks()
+    if count > 0 {
+        print("Marked \(count) tasks as completed!")
+    } else {
+        print("No pending tasks to complete.")
     }
 
 case "remove":
