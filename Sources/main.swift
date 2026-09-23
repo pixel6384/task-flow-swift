@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due|sort] [args]")
+    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due|sort|today] [args]")
     exit(1)
 }
 
@@ -181,6 +181,17 @@ case "sort":
         print("Tasks will now be sorted by due date.")
     } else {
         print("Error: Invalid sort order. Use 'priority' or 'due'.")
+    }
+
+case "today":
+    let tasks = manager.listTodayTasks()
+    if tasks.isEmpty {
+        print("No tasks due today!")
+    } else {
+        print("Tasks Due Today (Sorted by \(manager.getSortOrder().rawValue)):")
+        for (index, task) in tasks.enumerated() {
+            print("[\(index)] [\(task.priority.description)] \(task.title)")
+        }
     }
 
 default:

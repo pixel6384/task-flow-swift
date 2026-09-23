@@ -42,6 +42,13 @@ class TaskManager {
         return tasks.sorted { sortTasks($0, $1) }
     }
 
+    func listTodayTasks() -> [Task] {
+        let calendar = Calendar.current
+        return tasks.filter {
+            !$0.isCompleted && calendar.isDateInToday($0.dueDate ?? Date.distantFuture)
+        }.sorted { sortTasks($0, $1) }
+    }
+
     private func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {
         switch sortOrder {
         case .priority:
