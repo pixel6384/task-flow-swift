@@ -48,6 +48,20 @@ class TaskManager {
         return false
     }
 
+    func updateTask(index: Int, newTitle: String) -> Bool {
+        let pending = listTasks()
+        guard index >= 0 && index < pending.count else {
+            return false
+        }
+        let taskToUpdate = pending[index]
+        if let idx = tasks.firstIndex(where: { $0.id == taskToUpdate.id }) {
+            tasks[idx].title = newTitle
+            saveTasks()
+            return true
+        }
+        return false
+    }
+
     func clearCompleted() -> Int {
         let initialCount = tasks.count
         tasks.removeAll { $0.isCompleted }
