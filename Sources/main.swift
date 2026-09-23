@@ -4,7 +4,7 @@ let manager = TaskManager()
 let args = CommandLine.arguments
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|done|clear] [args]")
+    print("Usage: task-flow [add|list|done|remove|clear] [args]")
     exit(1)
 }
 
@@ -42,6 +42,17 @@ case "done":
     }
     if manager.completeTask(index: index) {
         print("Task marked as completed!")
+    } else {
+        print("Error: Task not found.")
+    }
+
+case "remove":
+    guard args.count >= 3, let index = Int(args[2]) else {
+        print("Error: Please provide a valid task index.")
+        exit(1)
+    }
+    if manager.removeTask(index: index) {
+        print("Task removed successfully!")
     } else {
         print("Error: Task not found.")
     }
