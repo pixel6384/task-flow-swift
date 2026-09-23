@@ -3,8 +3,20 @@ import Foundation
 let manager = TaskManager()
 let args = CommandLine.arguments
 
+func parseDate(_ dateString: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: dateString)
+}
+
+func formatDate(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+}
+
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status] [args]")
+    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due] [args]")
     exit(1)
 }
 
@@ -18,10 +30,16 @@ case "add":
     }
     let title = args[2]
     var priority = Priority.medium
+    var dueDate: Date? = nil
+    
     if args.contains("--priority high") { priority = .high }
     else if args.contains("--priority low") { priority = .low }
     
-    manager.addTask(title: title, priority: priority)
+    if let dueIndex = args.firstIndex(of: "--due"), args.count > dueIndex + 1 {
+        dueDate = parseDate(args[dueIndex + 1])
+    }
+    
+    manager.addTask(title: title, priority: priority, dueDate: dueDate)
     print("Task added successfully.")
 
 case "list":
@@ -31,7 +49,8 @@ case "list":
     } else {
         print("Pending Tasks:")
         for (index, task) in tasks.enumerated() {
-            print("[\(index)] [\(task.priority.description)] \(task.title)")
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            print("[\(index)] [\(task.priority.description)] \(task.title)\(dueStr)")
         }
     }
 
@@ -43,7 +62,8 @@ case "list-all":
         print("All Tasks:")
         for task in tasks {
             let status = task.isCompleted ? "[Done]" : "[Pending]"
-            print("\(status) [\(task.priority.description)] \(task.title)")
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            print("\(status) [\(task.priority.description)] \(task.title)\(dueStr)")
         }
     }
 
@@ -60,7 +80,8 @@ case "search":
         print("Search results:")
         for task in results {
             let status = task.isCompleted ? "[Done]" : "[Pending]"
-            print("\(status) [\(task.priority.description)] \(task.title)")
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            print("\(status) [\(task.priority.description)] \(task.title)\(dueStr)")
         }
     }
 
@@ -94,12 +115,13 @@ case "remove":
 
 case "update":
     guard args.count >= 3, let index = Int(args[2]) else {
-        print("Error: Usage: task-flow update [index] [\"title <new title>\"] [\"priority <high|medium|low>\"]")
+        print("Error: Usage: task-flow update [index] [\"title <new title>\"] [\"priority <high|medium|low>\"] [\"due <yyyy-MM-dd>\"]")
         exit(1)
     }
     
     var newTitle: String? = nil
     var newPriority: Priority? = nil
+    var newDueDate: Date? = nil
     
     if args.count >= 4 {
         if args[3] == "title" && args.count >= 5 {
@@ -109,15 +131,17 @@ case "update":
             if p == "high" { newPriority = .high }
             else if p == "medium" { newPriority = .medium }
             else if p == "low" { newPriority = .low }
+        } else if args[3] == "due" && args.count >= 5 {
+            newDueDate = parseDate(args[4])
         }
     }
     
-    if newTitle == nil && newPriority == nil {
-        print("Error: Please specify what to update: 'title <text>' or 'priority <level>'")
+    if newTitle == nil && newPriority == nil && newDueDate == nil {
+        print("Error: Please specify what to update: 'title <text>', 'priority <level>', or 'due <yyyy-MM-dd>'")
         exit(1)
     }
 
-    if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority) {
+    if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority, newDueDate: newDueDate) {
         print("Task updated successfully!")
     } else {
         print("Error: Task not found.")
@@ -126,6 +150,21 @@ case "update":
 case "clear":
     let removedCount = manager.clearCompleted()
     print("Cleared \(removedCount) completed tasks.")
+
+case "due":
+    guard args.count >= 4, let index = Int(args[2]) else {
+        print("Error: Usage: task-flow due [index] [yyyy-MM-dd]")
+        exit(1)
+    }
+    if let date = parseDate(args[3]) {
+        if manager.updateTask(index: index, newDueDate: date) {
+            print("Due date updated successfully!")
+        } else {
+            print("Error: Task not found.")
+        }
+    } else {
+        print("Error: Invalid date format. Please use yyyy-MM-dd.")
+    }
 
 default:
     print("Unknown command: \(command)")

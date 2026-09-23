@@ -10,18 +10,28 @@ class TaskManager {
         loadTasks()
     }
 
-    func addTask(title: String, priority: Priority) {
-        let task = Task(title: title, priority: priority)
+    func addTask(title: String, priority: Priority, dueDate: Date? = nil) {
+        let task = Task(title: title, priority: priority, dueDate: dueDate)
         tasks.append(task)
         saveTasks()
     }
 
     func listTasks() -> [Task] {
-        return tasks.filter { !$0.isCompleted }.sorted { $0.priority > $1.priority }
+        return tasks.filter { !$0.isCompleted }.sorted {
+            if $0.priority != $1.priority {
+                return $0.priority > $1.priority
+            }
+            return ($0.dueDate ?? Date.distantFuture) < ($1.dueDate ?? Date.distantFuture)
+        }
     }
 
     func listAllTasks() -> [Task] {
-        return tasks.sorted { $0.priority > $1.priority }
+        return tasks.sorted {
+            if $0.priority != $1.priority {
+                return $0.priority > $1.priority
+            }
+            return ($0.dueDate ?? Date.distantFuture) < ($1.dueDate ?? Date.distantFuture)
+        }
     }
 
     func searchTasks(query: String) -> [Task] {
@@ -62,7 +72,7 @@ class TaskManager {
         return false
     }
 
-    func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil) -> Bool {
+    func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil, newDueDate: Date? = nil) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {
             return false
@@ -71,6 +81,7 @@ class TaskManager {
         if let idx = tasks.firstIndex(where: { $0.id == taskToUpdate.id }) {
             if let title = newTitle { tasks[idx].title = title }
             if let priority = newPriority { tasks[idx].priority = priority }
+            if let dueDate = newDueDate { tasks[idx].dueDate = dueDate }
             saveTasks()
             return true
         }
