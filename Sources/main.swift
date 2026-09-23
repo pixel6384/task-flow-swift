@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due] [args]")
+    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status|due|sort] [args]")
     exit(1)
 }
 
@@ -47,7 +47,7 @@ case "list":
     if tasks.isEmpty {
         print("No pending tasks!")
     } else {
-        print("Pending Tasks:")
+        print("Pending Tasks (Sorted by \(manager.getSortOrder().rawValue)):")
         for (index, task) in tasks.enumerated() {
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
             print("[\(index)] [\(task.priority.description)] \(task.title)\(dueStr)")
@@ -59,7 +59,7 @@ case "list-all":
     if tasks.isEmpty {
         print("No tasks found!")
     } else {
-        print("All Tasks:")
+        print("All Tasks (Sorted by \(manager.getSortOrder().rawValue)):")
         for task in tasks {
             let status = task.isCompleted ? "[Done]" : "[Pending]"
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
@@ -90,6 +90,7 @@ case "status":
     print("Task Flow Status:")
     print("- Pending: \(stats.pending)")
     print("- Completed: \(stats.completed)")
+    print("- Current Sort: \(manager.getSortOrder().rawValue)")
 
 case "done":
     guard args.count >= 3, let index = Int(args[2]) else {
@@ -164,6 +165,22 @@ case "due":
         }
     } else {
         print("Error: Invalid date format. Please use yyyy-MM-dd.")
+    }
+
+case "sort":
+    guard args.count >= 3 else {
+        print("Error: Usage: task-flow sort [priority|due]")
+        exit(1)
+    }
+    let sortArg = args[2].lowercased()
+    if sortArg == "priority" {
+        manager.setSortOrder(.priority)
+        print("Tasks will now be sorted by priority.")
+    } else if sortArg == "due" {
+        manager.setSortOrder(.dueDate)
+        print("Tasks will now be sorted by due date.")
+    } else {
+        print("Error: Invalid sort order. Use 'priority' or 'due'.")
     }
 
 default:

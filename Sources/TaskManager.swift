@@ -1,13 +1,31 @@
 import Foundation
 
+enum SortOrder: String, Codable {
+    case priority
+    case dueDate
+}
+
 class TaskManager {
     private let storageURL: URL
+    private let settingsURL: URL
     private var tasks: [Task] = []
+    private var sortOrder: SortOrder = .priority
 
     init() {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.storageURL = home.appendingPathComponent(".taskflow.json")
+        self.settingsURL = home.appendingPathComponent(".taskflow-settings.json")
+        loadSettings()
         loadTasks()
+    }
+
+    func setSortOrder(_ order: SortOrder) {
+        self.sortOrder = order
+        saveSettings()
+    }
+
+    func getSortOrder() -> SortOrder {
+        return sortOrder
     }
 
     func addTask(title: String, priority: Priority, dueDate: Date? = nil) {
@@ -17,20 +35,25 @@ class TaskManager {
     }
 
     func listTasks() -> [Task] {
-        return tasks.filter { !$0.isCompleted }.sorted {
-            if $0.priority != $1.priority {
-                return $0.priority > $1.priority
-            }
-            return ($0.dueDate ?? Date.distantFuture) < ($1.dueDate ?? Date.distantFuture)
-        }
+        return tasks.filter { !$0.isCompleted }.sorted { sortTasks($0, $1) }
     }
 
     func listAllTasks() -> [Task] {
-        return tasks.sorted {
-            if $0.priority != $1.priority {
-                return $0.priority > $1.priority
+        return tasks.sorted { sortTasks($0, $1) }
+    }
+
+    private func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {
+        switch sortOrder {
+        case .priority:
+            if lhs.priority != rhs.priority {
+                return lhs.priority > rhs.priority
             }
-            return ($0.dueDate ?? Date.distantFuture) < ($1.dueDate ?? Date.distantFuture)
+            return (lhs.dueDate ?? Date.distantFuture) < (rhs.dueDate ?? Date.distantFuture)
+        case .dueDate:
+            if (lhs.dueDate ?? Date.distantFuture) != (rhs.dueDate ?? Date.distantFuture) {
+                return (lhs.dueDate ?? Date.distantFuture) < (rhs.dueDate ?? Date.distantFuture)
+            }
+            return lhs.priority > rhs.priority
         }
     }
 
@@ -105,6 +128,19 @@ class TaskManager {
         if let data = try? Data(contentsOf: storageURL),
            let decoded = try? JSONDecoder().decode([Task].self, from: data) {
             tasks = decoded
+        }
+    }
+
+    private func saveSettings() {
+        if let data = try? JSONEncoder().encode(sortOrder) {
+            try? data.write(to: settingsURL)
+        }
+    }
+
+    private func loadSettings() {
+        if let data = try? Data(contentsOf: settingsURL),
+           let decoded = try? JSONDecoder().decode(SortOrder.self, from: data) {
+            sortOrder = decoded
         }
     }
 }
