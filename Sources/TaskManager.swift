@@ -20,6 +20,10 @@ class TaskManager {
         return tasks.filter { !$0.isCompleted }.sorted { $0.priority > $1.priority }
     }
 
+    func listAllTasks() -> [Task] {
+        return tasks.sorted { $0.priority > $1.priority }
+    }
+
     func searchTasks(query: String) -> [Task] {
         return tasks.filter { $0.title.localizedCaseInsensitiveContains(query) }
     }

@@ -4,7 +4,7 @@ let manager = TaskManager()
 let args = CommandLine.arguments
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|done|remove|update|clear|search|status] [args]")
+    print("Usage: task-flow [add|list|list-all|done|remove|update|clear|search|status] [args]")
     exit(1)
 }
 
@@ -32,6 +32,18 @@ case "list":
         print("Pending Tasks:")
         for (index, task) in tasks.enumerated() {
             print("[\(index)] [\(task.priority.description)] \(task.title)")
+        }
+    }
+
+case "list-all":
+    let tasks = manager.listAllTasks()
+    if tasks.isEmpty {
+        print("No tasks found!")
+    } else {
+        print("All Tasks:")
+        for task in tasks {
+            let status = task.isCompleted ? "[Done]" : "[Pending]"
+            print("\(status) [\(task.priority.description)] \(task.title)")
         }
     }
 
