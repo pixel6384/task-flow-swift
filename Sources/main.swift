@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|done-all|remove|update|clear|search|status|due|sort|today] [args]")
+    print("Usage: task-flow [add|list|list-all|done|done-all|remove|update|clear|search|status|due|sort|today|filter] [args]")
     exit(1)
 }
 
@@ -199,6 +199,33 @@ case "today":
         print("Tasks Due Today (Sorted by \(manager.getSortOrder().rawValue)):")
         for (index, task) in tasks.enumerated() {
             print("[\(index)] [\(task.priority.description)] \(task.title)")
+        }
+    }
+
+case "filter":
+    guard args.count >= 3 else {
+        print("Error: Usage: task-flow filter [high|medium|low]")
+        exit(1)
+    }
+    let filterArg = args[2].lowercased()
+    var priority: Priority?
+    if filterArg == "high" { priority = .high }
+    else if filterArg == "medium" { priority = .medium }
+    else if filterArg == "low" { priority = .low }
+    
+    guard let p = priority else {
+        print("Error: Invalid priority. Use 'high', 'medium', or 'low'.")
+        exit(1)
+    }
+
+    let tasks = manager.listTasks(withPriority: p)
+    if tasks.isEmpty {
+        print("No pending tasks with priority \(p.description)!")
+    } else {
+        print("Pending \(p.description) Priority Tasks:")
+        for (index, task) in tasks.enumerated() {
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            print("[\(index)] \(task.title)\(dueStr)")
         }
     }
 

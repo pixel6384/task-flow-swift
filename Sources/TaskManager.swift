@@ -49,6 +49,10 @@ class TaskManager {
         }.sorted { sortTasks($0, $1) }
     }
 
+    func listTasks(withPriority priority: Priority) -> [Task] {
+        return tasks.filter { !$0.isCompleted && $0.priority == priority }.sorted { sortTasks($0, $1) }
+    }
+
     private func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {
         switch sortOrder {
         case .priority:
