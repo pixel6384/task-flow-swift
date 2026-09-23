@@ -20,6 +20,16 @@ class TaskManager {
         return tasks.filter { !$0.isCompleted }.sorted { $0.priority > $1.priority }
     }
 
+    func searchTasks(query: String) -> [Task] {
+        return tasks.filter { $0.title.localizedCaseInsensitiveContains(query) }
+    }
+
+    func getStats() -> (pending: Int, completed: Int) {
+        let pending = tasks.filter { !$0.isCompleted }.count
+        let completed = tasks.filter { $0.isCompleted }.count
+        return (pending, completed)
+    }
+
     func completeTask(index: Int) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {

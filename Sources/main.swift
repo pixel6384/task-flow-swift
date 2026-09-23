@@ -4,7 +4,7 @@ let manager = TaskManager()
 let args = CommandLine.arguments
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|done|remove|update|clear] [args]")
+    print("Usage: task-flow [add|list|done|remove|update|clear|search|status] [args]")
     exit(1)
 }
 
@@ -35,6 +35,29 @@ case "list":
         }
     }
 
+case "search":
+    guard args.count >= 3 else {
+        print("Error: Please provide a search term.")
+        exit(1)
+    }
+    let query = args[2]
+    let results = manager.searchTasks(query: query)
+    if results.isEmpty {
+        print("No tasks found matching '\(query)'.")
+    } else {
+        print("Search results:")
+        for task in results {
+            let status = task.isCompleted ? "[Done]" : "[Pending]"
+            print("\(status) [\(task.priority.description)] \(task.title)")
+        }
+    }
+
+case "status":
+    let stats = manager.getStats()
+    print("Task Flow Status:")
+    print("- Pending: \(stats.pending)")
+    print("- Completed: \(stats.completed)")
+
 case "done":
     guard args.count >= 3, let index = Int(args[2]) else {
         print("Error: Please provide a valid task index.")
@@ -59,7 +82,7 @@ case "remove":
 
 case "update":
     guard args.count >= 3, let index = Int(args[2]) else {
-        print("Error: Usage: task-flow update [index] ["title <new title>"] ["priority <high|medium|low>"]")
+        print("Error: Usage: task-flow update [index] [\"title <new title>\"] [\"priority <high|medium|low>\"]")
         exit(1)
     }
     
