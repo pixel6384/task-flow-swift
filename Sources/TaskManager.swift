@@ -30,8 +30,8 @@ class TaskManager {
         return sortOrder
     }
 
-    func addTask(title: String, priority: Priority, dueDate: Date? = nil) {
-        let task = Task(title: title, priority: priority, dueDate: dueDate)
+    func addTask(title: String, priority: Priority, dueDate: Date? = nil, tags: Set<String> = []) {
+        let task = Task(title: title, priority: priority, dueDate: dueDate, tags: tags)
         tasks.append(task)
         saveTasks()
     }
@@ -57,6 +57,10 @@ class TaskManager {
 
     func listTasks(withPriority priority: Priority) -> [Task] {
         return tasks.filter { !$0.isCompleted && $0.priority == priority }.sorted { sortTasks($0, $1) }
+    }
+
+    func listTasks(withTag tag: String) -> [Task] {
+        return tasks.filter { !$0.isCompleted && $0.tags.contains(tag) }.sorted { sortTasks($0, $1) }
     }
 
     private func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {
@@ -150,7 +154,7 @@ class TaskManager {
         return false
     }
 
-    func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil, newDueDate: Date? = nil) -> Bool {
+    func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil, newDueDate: Date? = nil, newTags: Set<String>? = nil) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {
             return false
@@ -160,6 +164,7 @@ class TaskManager {
             if let title = newTitle { tasks[idx].title = title }
             if let priority = newPriority { tasks[idx].priority = priority }
             if let dueDate = newDueDate { tasks[idx].dueDate = dueDate }
+            if let tags = newTags { tasks[idx].tags = tags }
             saveTasks()
             return true
         }

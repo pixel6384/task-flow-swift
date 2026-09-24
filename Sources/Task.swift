@@ -24,12 +24,14 @@ struct Task: Codable {
     var priority: Priority
     var isCompleted: Bool
     var dueDate: Date?
+    var tags: Set<String>
 
-    init(title: String, priority: Priority, dueDate: Date? = nil) {
+    init(title: String, priority: Priority, dueDate: Date? = nil, tags: Set<String> = []) {
         self.id = UUID()
         self.title = title
         self.priority = priority
         self.isCompleted = false
         self.dueDate = dueDate
+        self.tags = tags
     }
 }

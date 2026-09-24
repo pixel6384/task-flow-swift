@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|clear|search|status|due|sort|today|filter] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|clear|search|status|due|sort|today|filter|tags] [args]")
     exit(1)
 }
 
@@ -31,6 +31,7 @@ case "add":
     let title = args[2]
     var priority = Priority.medium
     var dueDate: Date? = nil
+    var tags: Set<String> = []
     
     if args.contains("--priority high") { priority = .high }
     else if args.contains("--priority low") { priority = .low }
@@ -38,8 +39,13 @@ case "add":
     if let dueIndex = args.firstIndex(of: "--due"), args.count > dueIndex + 1 {
         dueDate = parseDate(args[dueIndex + 1])
     }
+
+    if let tagsIndex = args.firstIndex(of: "--tags"), args.count > tagsIndex + 1 {
+        let tagsString = args[tagsIndex + 1]
+        tags = Set(tagsString.components(separatedBy: ","))
+    }
     
-    manager.addTask(title: title, priority: priority, dueDate: dueDate)
+    manager.addTask(title: title, priority: priority, dueDate: dueDate, tags: tags)
     print("Task added successfully.")
 
 case "list":
@@ -50,7 +56,8 @@ case "list":
         print("Pending Tasks (Sorted by \(manager.getSortOrder().rawValue)):")
         for (index, task) in tasks.enumerated() {
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
-            print("[\(index)] [\(task.priority.description)] \(task.title)\(dueStr)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("[\(index)] [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
         }
     }
 
@@ -62,7 +69,8 @@ case "list-completed":
         print("Completed Tasks (Sorted by \(manager.getSortOrder().rawValue)):")
         for task in tasks {
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
-            print("[Done] [\(task.priority.description)] \(task.title)\(dueStr)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("[Done] [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
         }
     }
 
@@ -75,7 +83,8 @@ case "list-all":
         for task in tasks {
             let status = task.isCompleted ? "[Done]" : "[Pending]"
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
-            print("\(status) [\(task.priority.description)] \(task.title)\(dueStr)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("\(status) [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
         }
     }
 
@@ -93,7 +102,8 @@ case "search":
         for task in results {
             let status = task.isCompleted ? "[Done]" : "[Pending]"
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
-            print("\(status) [\(task.priority.description)] \(task.title)\(dueStr)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("\(status) [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
         }
     }
 
@@ -147,13 +157,14 @@ case "archive":
 
 case "update":
     guard args.count >= 3, let index = Int(args[2]) else {
-        print("Error: Usage: task-flow update [index] [title <new title>] [priority <high|medium|low>] [due <yyyy-MM-dd>]")
+        print("Error: Usage: task-flow update [index] [title <new title>] [priority <high|medium|low>] [due <yyyy-MM-dd>] [tags <t1,t2>]")
         exit(1)
     }
     
     var newTitle: String? = nil
     var newPriority: Priority? = nil
     var newDueDate: Date? = nil
+    var newTags: Set<String>? = nil
     
     var i = 3
     while i < args.count {
@@ -172,6 +183,9 @@ case "update":
             } else if key == "due" {
                 newDueDate = parseDate(value)
                 i += 2
+            } else if key == "tags" {
+                newTags = Set(value.components(separatedBy: ","))
+                i += 2
             } else {
                 i += 1
             }
@@ -180,12 +194,12 @@ case "update":
         }
     }
     
-    if newTitle == nil && newPriority == nil && newDueDate == nil {
-        print("Error: Please specify what to update: 'title <text>', 'priority <level>', or 'due <yyyy-MM-dd>'")
+    if newTitle == nil && newPriority == nil && newDueDate == nil && newTags == nil {
+        print("Error: Please specify what to update: 'title <text>', 'priority <level>', 'due <yyyy-MM-dd>', or 'tags <t1,t2>'")
         exit(1)
     }
 
-    if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority, newDueDate: newDueDate) {
+    if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority, newDueDate: newDueDate, newTags: newTags) {
         print("Task updated successfully!")
     } else {
         print("Error: Task not found.")
@@ -233,7 +247,8 @@ case "today":
     } else {
         print("Tasks Due Today (Sorted by \(manager.getSortOrder().rawValue)):")
         for (index, task) in tasks.enumerated() {
-            print("[\(index)] [\(task.priority.description)] \(task.title)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("[\(index)] [\(task.priority.description)] \(task.title)\(tagsStr)")
         }
     }
 
@@ -260,7 +275,26 @@ case "filter":
         print("Pending \(p.description) Priority Tasks:")
         for (index, task) in tasks.enumerated() {
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
-            print("[\(index)] \(task.title)\(dueStr)")
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("[\(index)] \(task.title)\(tagsStr)\(dueStr)")
+        }
+    }
+
+case "tags":
+    guard args.count >= 3 else {
+        print("Error: Usage: task-flow tags [tag_name]")
+        exit(1)
+    }
+    let tag = args[2]
+    let tasks = manager.listTasks(withTag: tag)
+    if tasks.isEmpty {
+        print("No pending tasks with tag '\(tag)'!")
+    } else {
+        print("Pending Tasks tagged as '\(tag)':")
+        for (index, task) in tasks.enumerated() {
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            let tagsStr = !task.tags.isEmpty ? " [\(task.tags.joined(separator: ", "))]" : ""
+            print("[\(index)] [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
         }
     }
 
