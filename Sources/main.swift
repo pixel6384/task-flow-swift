@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|done|done-all|remove|update|clear|search|status|due|sort|today|filter] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|update|clear|search|status|due|sort|today|filter] [args]")
     exit(1)
 }
 
@@ -51,6 +51,18 @@ case "list":
         for (index, task) in tasks.enumerated() {
             let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
             print("[\(index)] [\(task.priority.description)] \(task.title)\(dueStr)")
+        }
+    }
+
+case "list-completed":
+    let tasks = manager.listCompletedTasks()
+    if tasks.isEmpty {
+        print("No completed tasks found!")
+    } else {
+        print("Completed Tasks (Sorted by \(manager.getSortOrder().rawValue)):")
+        for task in tasks {
+            let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+            print("[Done] [\(task.priority.description)] \(task.title)\(dueStr)")
         }
     }
 
@@ -124,7 +136,7 @@ case "remove":
 
 case "update":
     guard args.count >= 3, let index = Int(args[2]) else {
-        print("Error: Usage: task-flow update [index] [\"title <new title>\"] [\"priority <high|medium|low>\"] [\"due <yyyy-MM-dd>\"]")
+        print("Error: Usage: task-flow update [index] [title <new title>] [priority <high|medium|low>] [due <yyyy-MM-dd>]")
         exit(1)
     }
     
@@ -132,16 +144,28 @@ case "update":
     var newPriority: Priority? = nil
     var newDueDate: Date? = nil
     
-    if args.count >= 4 {
-        if args[3] == "title" && args.count >= 5 {
-            newTitle = args[4]
-        } else if args[3] == "priority" && args.count >= 5 {
-            let p = args[4].lowercased()
-            if p == "high" { newPriority = .high }
-            else if p == "medium" { newPriority = .medium }
-            else if p == "low" { newPriority = .low }
-        } else if args[3] == "due" && args.count >= 5 {
-            newDueDate = parseDate(args[4])
+    var i = 3
+    while i < args.count {
+        let key = args[i]
+        if i + 1 < args.count {
+            let value = args[i+1]
+            if key == "title" {
+                newTitle = value
+                i += 2
+            } else if key == "priority" {
+                let p = value.lowercased()
+                if p == "high" { newPriority = .high }
+                else if p == "medium" { newPriority = .medium }
+                else if p == "low" { newPriority = .low }
+                i += 2
+            } else if key == "due" {
+                newDueDate = parseDate(value)
+                i += 2
+            } else {
+                i += 1
+            }
+        } else {
+            i += 1
         }
     }
     

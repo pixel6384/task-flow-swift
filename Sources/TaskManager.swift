@@ -38,6 +38,10 @@ class TaskManager {
         return tasks.filter { !$0.isCompleted }.sorted { sortTasks($0, $1) }
     }
 
+    func listCompletedTasks() -> [Task] {
+        return tasks.filter { $0.isCompleted }.sorted { sortTasks($0, $1) }
+    }
+
     func listAllTasks() -> [Task] {
         return tasks.sorted { sortTasks($0, $1) }
     }
