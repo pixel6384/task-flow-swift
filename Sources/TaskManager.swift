@@ -171,6 +171,27 @@ class TaskManager {
         return false
     }
 
+    func upgradePriority(index: Int) -> Priority? {
+        let pending = listTasks()
+        guard index >= 0 && index < pending.count else {
+            return nil
+        }
+        let taskToUpgrade = pending[index]
+        if let idx = tasks.firstIndex(where: { $0.id == taskToUpgrade.id }) {
+            let current = tasks[idx].priority
+            let next: Priority
+            switch current {
+            case .low: next = .medium
+            case .medium: next = .high
+            case .high: next = .high
+            }
+            tasks[idx].priority = next
+            saveTasks()
+            return next
+        }
+        return nil
+    }
+
     func clearCompleted() -> Int {
         let initialCount = tasks.count
         tasks.removeAll { $0.isCompleted }

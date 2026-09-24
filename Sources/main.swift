@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|clear|search|status|due|sort|today|filter|tags] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|upgrade|clear|search|status|due|sort|today|filter|tags] [args]")
     exit(1)
 }
 
@@ -201,6 +201,17 @@ case "update":
 
     if manager.updateTask(index: index, newTitle: newTitle, newPriority: newPriority, newDueDate: newDueDate, newTags: newTags) {
         print("Task updated successfully!")
+    } else {
+        print("Error: Task not found.")
+    }
+
+case "upgrade":
+    guard args.count >= 3, let index = Int(args[2]) else {
+        print("Error: Usage: task-flow upgrade [index]")
+        exit(1)
+    }
+    if let newPriority = manager.upgradePriority(index: index) {
+        print("Task priority upgraded to \(newPriority.description)!")
     } else {
         print("Error: Task not found.")
     }
