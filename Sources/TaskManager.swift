@@ -88,6 +88,25 @@ class TaskManager {
         return (pending, completed)
     }
 
+    func getPrioritySummary() -> [Priority: (pending: Int, completed: Int)] {
+        var summary: [Priority: (pending: Int, completed: Int)] = [
+            .high: (0, 0),
+            .medium: (0, 0),
+            .low: (0, 0)
+        ]
+        
+        for task in tasks {
+            var counts = summary[task.priority] ?? (0, 0)
+            if task.isCompleted {
+                counts.completed += 1
+            } else {
+                counts.pending += 1
+            }
+            summary[task.priority] = counts
+        }
+        return summary
+    }
+
     func completeTask(index: Int) -> Bool {
         let pending = listTasks()
         guard index >= 0 && index < pending.count else {

@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|upgrade|clear|search|status|due|sort|today|filter|tags] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|upgrade|clear|search|status|summary|due|sort|today|filter|tags] [args]")
     exit(1)
 }
 
@@ -113,6 +113,17 @@ case "status":
     print("- Pending: \(stats.pending)")
     print("- Completed: \(stats.completed)")
     print("- Current Sort: \(manager.getSortOrder().rawValue)")
+
+case "summary":
+    let summary = manager.getPrioritySummary()
+    print("Task Flow Summary:")
+    print("Priority  | Pending | Completed")
+    print("------------------------------")
+    let priorities: [Priority] = [.high, .medium, .low]
+    for p in priorities {
+        let counts = summary[p] ?? (0, 0)
+        print("\(p.description.padding(toLength: 9, withPad: " ", startingAt: 0)) | \(counts.pending.description.padding(toLength: 7, withPad: " ", startingAt: 0)) | \(counts.completed)")
+    }
 
 case "done":
     guard args.count >= 3, let index = Int(args[2]) else {
