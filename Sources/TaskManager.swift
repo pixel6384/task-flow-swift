@@ -8,6 +8,7 @@ enum SortOrder: String, Codable {
 class TaskManager {
     private let storageURL: URL
     private let settingsURL: URL
+    private let archiveURL: URL
     private var tasks: [Task] = []
     private var sortOrder: SortOrder = .priority
 
@@ -15,6 +16,7 @@ class TaskManager {
         let home = FileManager.default.homeDirectoryForCurrentUser
         self.storageURL = home.appendingPathComponent(".taskflow.json")
         self.settingsURL = home.appendingPathComponent(".taskflow-settings.json")
+        self.archiveURL = home.appendingPathComponent(".taskflow-archive.json")
         loadSettings()
         loadTasks()
     }
@@ -116,6 +118,32 @@ class TaskManager {
         let taskToRemove = pending[index]
         if let idx = tasks.firstIndex(where: { $0.id == taskToRemove.id }) {
             tasks.remove(at: idx)
+            saveTasks()
+            return true
+        }
+        return false
+    }
+
+    func archiveTask(index: Int) -> Bool {
+        let pending = listTasks()
+        guard index >= 0 && index < pending.count else {
+            return false
+        }
+        let taskToArchive = pending[index]
+        
+        if let idx = tasks.firstIndex(where: { $0.id == taskToArchive.id }) {
+            var archive: [Task] = []
+            if let data = try? Data(contentsOf: archiveURL),
+               let decoded = try? JSONDecoder().decode([Task].self, from: data) {
+                archive = decoded
+            }
+            
+            archive.append(tasks.remove(at: idx))
+            
+            if let archiveData = try? JSONEncoder().encode(archive) {
+                try? archiveData.write(to: archiveURL)
+            }
+            
             saveTasks()
             return true
         }

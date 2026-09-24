@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|update|clear|search|status|due|sort|today|filter] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|update|clear|search|status|due|sort|today|filter] [args]")
     exit(1)
 }
 
@@ -130,6 +130,17 @@ case "remove":
     }
     if manager.removeTask(index: index) {
         print("Task removed successfully!")
+    } else {
+        print("Error: Task not found.")
+    }
+
+case "archive":
+    guard args.count >= 3, let index = Int(args[2]) else {
+        print("Error: Please provide a valid task index.")
+        exit(1)
+    }
+    if manager.archiveTask(index: index) {
+        print("Task archived successfully!")
     } else {
         print("Error: Task not found.")
     }
