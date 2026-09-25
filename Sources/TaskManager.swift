@@ -63,6 +63,14 @@ class TaskManager {
         return tasks.filter { !$0.isCompleted && $0.tags.contains(tag) }.sorted { sortTasks($0, $1) }
     }
 
+    func getAllUniqueTags() -> Set<String> {
+        var allTags = Set<String>()
+        for task in tasks {
+            allTags.formUnion(task.tags)
+        }
+        return allTags
+    }
+
     private func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {
         switch sortOrder {
         case .priority:
@@ -171,6 +179,18 @@ class TaskManager {
             return true
         }
         return false
+    }
+
+    func clearArchive() -> Bool {
+        do {
+            if FileManager.default.fileExists(atPath: archiveURL.path) {
+                try FileManager.default.removeItem(at: archiveURL)
+                return true
+            }
+            return false
+        } catch {
+            return false
+        }
     }
 
     func updateTask(index: Int, newTitle: String? = nil, newPriority: Priority? = nil, newDueDate: Date? = nil, newTags: Set<String>? = nil) -> Bool {
