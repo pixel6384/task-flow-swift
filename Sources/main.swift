@@ -16,7 +16,7 @@ func formatDate(_ date: Date) -> String {
 }
 
 if args.count < 2 {
-    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|clear-archive|update|upgrade|clear|search|status|summary|due|sort|today|filter|tags] [args]")
+    print("Usage: task-flow [add|list|list-all|list-completed|done|done-all|remove|archive|clear-archive|update|upgrade|clear|search|status|summary|due|sort|today|filter|tags|pomodoro|export] [args]")
     exit(1)
 }
 
@@ -331,6 +331,52 @@ case "tags":
                 print("[\(index)] [\(task.priority.description)] \(task.title)\(tagsStr)\(dueStr)")
             }
         }
+    }
+
+case "pomodoro":
+    guard args.count >= 3, let index = Int(args[2]) else {
+        print("Error: Usage: task-flow pomodoro [index]")
+        exit(1)
+    }
+    let tasks = manager.listTasks()
+    guard index >= 0 && index < tasks.count else {
+        print("Error: Task not found.")
+        exit(1)
+    }
+    let task = tasks[index]
+    print("Starting Pomodoro timer for: \(task.title)")
+    print("Focus for 25 minutes. Go!")
+    
+    let duration = 25 * 60
+    for i in stride(from: duration, through: 1, by: -1) {
+        let mins = i / 60
+        let secs = i % 60
+        print("\rTime remaining: \(mins):\(String(format: "%02d", secs))", terminator: "")
+        fflush(stdout)
+        sleep(1)
+    }
+    print("\nTime's up! Take a break.")
+
+case "export":
+    guard args.count >= 3 else {
+        print("Error: Usage: task-flow export [filename]")
+        exit(1)
+    }
+    let filename = args[2]
+    let tasks = manager.listAllTasks()
+    var output = "TaskFlow Export - \(Date())\n"
+    output += "==========================================\n"
+    for task in tasks {
+        let status = task.isCompleted ? "[Done]" : "[Pending]"
+        let dueStr = task.dueDate != nil ? " (Due: \(formatDate(task.dueDate!)))" : ""
+        output += "\(status) [\(task.priority.description)] \(task.title)\(dueStr)\n"
+    }
+    
+    do {
+        try output.write(toFile: filename, atomically: true, encoding: .utf8)
+        print("Tasks exported successfully to \(filename)")
+    } catch {
+        print("Error exporting tasks: \(error)")
     }
 
 default:
